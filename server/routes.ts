@@ -68,16 +68,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(sql`DATE(sent_at) = CURRENT_DATE`);
       const emailsToday = todayResult?.count || 0;
 
-      // Get emails by postcode (top 5)
-      const emailsByPostcode = await db
+      // Get count of unique postcodes
+      const [uniquePostcodesResult] = await db
         .select({
-          postcode: emailMetrics.postcode,
-          count: count(),
+          uniqueCount: sql`COUNT(DISTINCT ${emailMetrics.postcode})`,
         })
-        .from(emailMetrics)
-        .groupBy(emailMetrics.postcode)
-        .orderBy(desc(count()))
-        .limit(5);
+        .from(emailMetrics);
+      
+      const uniquePostcodesCount = Number(uniquePostcodesResult?.uniqueCount) || 0;
+
+      // Only get emails by postcode breakdown if we have at least 5 different postcodes
+      // This ensures sufficient anonymity in the stats
+      let emailsByPostcode: { postcode: string; count: number }[] = [];
+      if (uniquePostcodesCount >= 5) {
+        emailsByPostcode = await db
+          .select({
+            postcode: emailMetrics.postcode,
+            count: count(),
+          })
+          .from(emailMetrics)
+          .groupBy(emailMetrics.postcode)
+          .orderBy(desc(count()))
+          .limit(5);
+      }
 
       // Get 10 most recent emails
       const recentEmails = await db
@@ -135,6 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = {
         totalEmailsSent,
         emailsToday,
+        uniquePostcodesCount,
         emailsByPostcode,
         recentEmails: formattedRecentEmails,
         emailsSentByDay

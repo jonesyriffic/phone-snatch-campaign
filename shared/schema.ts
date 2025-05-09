@@ -41,13 +41,14 @@ export type EmailMetric = typeof emailMetrics.$inferSelect;
 export const dashboardStatsSchema = z.object({
   totalEmailsSent: z.number(),
   emailsToday: z.number(),
+  uniquePostcodesCount: z.number(),
   emailsByPostcode: z.array(z.object({
     postcode: z.string(),
     count: z.number()
   })),
   recentEmails: z.array(z.object({
     fullName: z.string(),
-    postcode: z.string(),
+    postcode: z.string(), // This will be removed from UI display for privacy
     sentAt: z.string(),
     anonymous: z.boolean().optional(),
   })).optional(),

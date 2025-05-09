@@ -33,7 +33,7 @@ export default function Dashboard() {
     onSuccess: (data) => {
       toast({
         title: "Test data added",
-        description: `Added ${data.data.fullName} from ${data.data.postcode}`,
+        description: `Added test email data successfully`,
       });
       // Invalidate the dashboard stats query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard-stats'] });
@@ -86,7 +86,7 @@ export default function Dashboard() {
           />
           <StatCard 
             title="E20 Postcodes" 
-            value={stats?.emailsByPostcode?.length ?? 0} 
+            value={stats?.uniquePostcodesCount ?? 0} 
             icon={<Users className="h-8 w-8 text-blue-600" />}
             isLoading={isLoading} 
           />
@@ -131,9 +131,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-slate-800">{email.fullName}</p>
-                        <div className="flex text-sm text-slate-500 space-x-3">
-                          <span>{email.postcode}</span>
-                          <span>•</span>
+                        <div className="text-sm text-slate-500">
                           <span>{email.sentAt}</span>
                         </div>
                       </div>
@@ -192,7 +190,12 @@ export default function Dashboard() {
                   })}
                 </div>
               ) : (
-                <div className="text-center text-slate-500 py-8">No postcode data available</div>
+                <div className="text-center text-slate-500 py-6">
+                  <p className="mb-2">Postcode breakdown not available</p>
+                  <p className="text-xs text-slate-400">
+                    For privacy reasons, postcode breakdown is only shown when we have at least 5 different postcodes
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
