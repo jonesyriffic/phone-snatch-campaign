@@ -5,6 +5,7 @@ import { emailMetrics, emailFormSchema, dashboardStatsSchema } from "@shared/sch
 import { count, desc, eq, sql } from "drizzle-orm";
 import { formatDate } from "@/lib/utils";
 import { addTestEmailRecord, clearAllEmailRecords } from "./dev-utilities";
+import { generateEmailVariation } from "./aiService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Record email metrics and return success
@@ -169,6 +170,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoint to clear all email records for production deployment
   app.post("/api/dev/clear-data", clearAllEmailRecords);
+  
+  // Endpoint to generate email content variations using AI
+  app.post("/api/generate-email-variation", async (req, res) => {
+    try {
+      // Validate the input
+      const { emailContent, fullName, postcode } = req.body;
+      
+      if (!emailContent || !fullName || !postcode) {
+        return res.status(400).json({ 
+          message: "Missing required fields: emailContent, fullName, or postcode" 
+        });
+      }
+      
+      // Generate a variation of the email content
+      const userContext = { fullName, postcode };
+      const variationContent = await generateEmailVariation(emailContent, userContext);
+      
+      return res.status(200).json({ 
+        message: "Email variation generated successfully",
+        emailContent: variationContent
+      });
+    } catch (error) {
+      console.error("Error generating email variation:", error);
+      return res.status(500).json({ 
+        message: "Failed to generate email variation. Using original content." 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
