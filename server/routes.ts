@@ -4,6 +4,7 @@ import { db } from "./db";
 import { emailMetrics, emailFormSchema, dashboardStatsSchema } from "@shared/schema";
 import { count, desc, eq, sql } from "drizzle-orm";
 import { formatDate } from "@/lib/utils";
+import { addTestEmailRecord } from "./dev-utilities";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Record email metrics and return success
@@ -89,11 +90,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(desc(emailMetrics.sentAt))
         .limit(10);
 
-      // Format recent emails for display
-      const formattedRecentEmails = recentEmails.map(email => ({
-        ...email,
-        sentAt: formatDate(email.sentAt.toISOString())
-      }));
+      // Format recent emails for display with privacy (first name + last initial only)
+      const formattedRecentEmails = recentEmails.map(email => {
+        // Split the name and format as "First Last-Initial."
+        const nameParts = email.fullName.trim().split(/\s+/);
+        let formattedName;
+        
+        if (nameParts.length > 1) {
+          // First name + last initial (e.g., "John S.")
+          formattedName = `${nameParts[0]} ${nameParts[nameParts.length - 1].charAt(0)}.`;
+        } else {
+          // Just first name if that's all we have
+          formattedName = nameParts[0];
+        }
+        
+        return {
+          ...email,
+          fullName: formattedName,
+          sentAt: formatDate(email.sentAt.toISOString())
+        };
+      });
 
       // Get emails sent by day (last 7 days)
       const emailsSentByDay = await db

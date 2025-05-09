@@ -65,8 +65,12 @@ export default function Home() {
               <p className="text-slate-600 text-sm">Yes, the email template is fully editable. Feel free to personalize it while keeping the core message intact.</p>
             </div>
             <div>
-              <h3 className="font-medium text-slate-700">How will I know my email was sent?</h3>
-              <p className="text-slate-600 text-sm">You'll receive a confirmation message on this page, and a copy of the email will be sent to your email address.</p>
+              <h3 className="font-medium text-slate-700">How does the email sending work?</h3>
+              <p className="text-slate-600 text-sm">After filling out the form, your default email app will open with the pre-filled message. You'll need to click Send in your email app to actually send the email to the MP. This way, the email comes directly from your personal email address.</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-slate-700">Will my personal information be shared?</h3>
+              <p className="text-slate-600 text-sm">We only collect anonymized metrics (like your postcode) to track campaign impact. On the dashboard, we only display your first name and last initial for privacy. Your full name and email are only shared when you choose to send the email.</p>
             </div>
           </div>
         </div>

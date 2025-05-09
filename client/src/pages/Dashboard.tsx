@@ -5,6 +5,7 @@ import { DashboardStats } from "@shared/schema";
 import { ArrowUp, Mail, Users, LineChart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { data: stats, isLoading, error } = useQuery<DashboardStats>({
@@ -99,7 +100,12 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center text-slate-500 py-8">No emails have been sent yet</div>
+                <div className="text-center py-8">
+                  <p className="text-slate-500 mb-4">No emails have been sent yet</p>
+                  <Link href="/" className="text-blue-600 underline text-sm">
+                    Go to the form to prepare your first email
+                  </Link>
+                </div>
               )}
             </CardContent>
           </Card>
