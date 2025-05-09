@@ -29,9 +29,9 @@ export const addTestEmailRecord = async (req: Request, res: Response) => {
       fullName: randomName,
       postcode: randomPostcode,
       email: randomEmail,
-      description: 'This is a test record',
       userAgent: req.headers['user-agent'] || '',
-      customizedTemplate: Math.random() > 0.5 // Randomly set to true or false
+      customizedTemplate: Math.random() > 0.5, // Randomly set to true or false
+      anonymous: Math.random() > 0.7 // About 30% will be anonymous
     });
     
     return res.status(200).json({ 

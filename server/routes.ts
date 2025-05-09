@@ -19,7 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { fullName, postcode, email, description, emailContent } = validation.data;
+      const { fullName, postcode, email, anonymous, emailContent } = validation.data;
       const userAgent = req.headers["user-agent"] || "";
       
       // Make sure postcode is E20
@@ -38,9 +38,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fullName,
         postcode: postcode.toUpperCase(),
         email,
-        description: description || null,
         userAgent,
-        customizedTemplate
+        customizedTemplate,
+        anonymous
       });
 
       return res.status(200).json({ message: "Email metrics recorded successfully" });
@@ -85,6 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fullName: emailMetrics.fullName,
           postcode: emailMetrics.postcode,
           sentAt: emailMetrics.sentAt,
+          anonymous: emailMetrics.anonymous,
         })
         .from(emailMetrics)
         .orderBy(desc(emailMetrics.sentAt))
@@ -92,7 +93,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Format recent emails for display with privacy (first name + last initial only)
       const formattedRecentEmails = recentEmails.map(email => {
-        // Split the name and format as "First Last-Initial."
+        // If anonymous is true, return "Anonymous"
+        if (email.anonymous) {
+          return {
+            ...email,
+            fullName: "Anonymous",
+            sentAt: formatDate(email.sentAt.toISOString())
+          };
+        }
+        
+        // Otherwise, format as first name + last initial
         const nameParts = email.fullName.trim().split(/\s+/);
         let formattedName;
         

@@ -23,10 +23,10 @@ export const emailMetrics = pgTable("email_metrics", {
   fullName: text("full_name").notNull(),
   postcode: text("postcode").notNull(),
   email: text("email").notNull(),
-  description: text("description"),
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   userAgent: text("user_agent"),
   customizedTemplate: boolean("customized_template").default(false),
+  anonymous: boolean("anonymous").default(false),
 });
 
 export const insertEmailMetricSchema = createInsertSchema(emailMetrics).omit({
@@ -49,6 +49,7 @@ export const dashboardStatsSchema = z.object({
     fullName: z.string(),
     postcode: z.string(),
     sentAt: z.string(),
+    anonymous: z.boolean().optional(),
   })).optional(),
   emailsSentByDay: z.array(z.object({
     date: z.string(),
@@ -73,7 +74,7 @@ export const emailFormSchema = z.object({
   email: z.string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
-  description: z.string().optional(),
+  anonymous: z.boolean().default(false),
   emailContent: z.string().min(1, "Email content is required")
 });
 
