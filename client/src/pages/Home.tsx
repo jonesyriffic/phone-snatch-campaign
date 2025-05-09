@@ -77,7 +77,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="text-center text-slate-500 text-sm">
-          <p>This tool is created for E20 residents to address the phone theft issue. Last updated: June 2023</p>
+          <p>This tool is created for E20 residents to address the phone theft issue. Last updated: May 2025</p>
         </footer>
       </div>
     </>
