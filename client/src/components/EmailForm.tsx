@@ -8,6 +8,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { apiRequest } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 import { emailFormSchema, type EmailFormData } from "@/lib/validation";
+import { Loader2, Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const DEFAULT_EMAIL_CONTENT = `Dear Ms. Kumaran,
 
@@ -42,6 +44,8 @@ interface EmailFormProps {
 
 export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingVariation, setIsGeneratingVariation] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<EmailFormData>({
     resolver: zodResolver(emailFormSchema),
@@ -76,6 +80,64 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
     
     form.setValue("emailContent", content);
   }, []);
+
+  // Function to generate an AI variation of the email content
+  async function generateEmailVariation() {
+    // Validate that required fields are filled
+    const fullName = form.getValues("fullName");
+    const postcode = form.getValues("postcode");
+    const emailContent = form.getValues("emailContent");
+
+    if (!fullName || !postcode) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in your name and postcode first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if postcode starts with E20
+    if (!postcode.toLowerCase().startsWith('e20')) {
+      toast({
+        title: "Invalid postcode",
+        description: "This form is only for E20 residents. Please enter a valid E20 postcode.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingVariation(true);
+
+    try {
+      // Call the API to generate a variation
+      const response = await apiRequest("POST", "/api/generate-email-variation", {
+        fullName,
+        postcode,
+        emailContent,
+      });
+
+      // Update the form with the new content
+      if (response && response.emailContent) {
+        form.setValue("emailContent", response.emailContent);
+        
+        toast({
+          title: "Email variation generated",
+          description: "A unique version of your email has been created to help bypass filters.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating email variation:", error);
+      toast({
+        title: "Couldn't generate email variation",
+        description: "There was an issue creating a variation. Your original email content remains unchanged.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingVariation(false);
+    }
+  }
 
   async function onSubmit(data: EmailFormData) {
     setIsSubmitting(true);
@@ -249,9 +311,31 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
                   name="emailContent"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-slate-700">
-                        Email Content <span className="text-slate-500 text-xs">(editable)</span>
-                      </FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel className="text-sm font-medium text-slate-700">
+                          Email Content <span className="text-slate-500 text-xs">(editable)</span>
+                        </FormLabel>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={generateEmailVariation}
+                          disabled={isGeneratingVariation}
+                          className="flex items-center gap-1 text-xs"
+                        >
+                          {isGeneratingVariation ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Generating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-3 w-3" />
+                              <span>Generate Unique Variation</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
                       <FormControl>
                         <Textarea 
                           rows={16} 
@@ -260,6 +344,9 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
                         />
                       </FormControl>
                       <FormMessage className="text-red-500 text-sm" />
+                      <FormDescription className="text-xs text-slate-500 mt-1">
+                        Bypass MP email filters by generating a unique variation of this template.
+                      </FormDescription>
                     </FormItem>
                   )}
                 />
