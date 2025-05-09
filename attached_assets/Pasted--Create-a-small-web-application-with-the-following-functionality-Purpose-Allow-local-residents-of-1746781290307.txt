@@ -1,0 +1,67 @@
+"Create a small web application with the following functionality:
+
+Purpose:
+Allow local residents of the E20 postcode area (Stratford and Bow constituency) to easily send a pre-written (but customizable) email to their Member of Parliament, Uma Kumaran MP, regarding urgent concerns about phone thefts in their local area.
+
+User Interface (Frontend - single page):
+
+    A clear title: "E20 Residents: Email Uma Kumaran MP About Phone Thefts Now!" (or similar, conveying urgency).
+    Input field for "Your Full Name" (Required).
+    Input field for "Your Postcode" (Required). This field should validate that the input starts with "E20" (case-insensitive) and is a plausible UK postcode format (e.g., "E20 1JG", "e201jg"). If invalid, show an error message.
+    Input field for "Your Email Address" (Required, for the CC copy and to be included in the email signature).
+    An optional text input field labelled: "Optional: Briefly describe yourself or add a specific observation (e.g., 'A concerned parent', 'Long-term E20 resident')"
+    A text area pre-filled with the template email (provided below). This text area should be editable by the user if they wish to add to or slightly modify the main body of the message, but the core pre-filled text should guide their input. The placeholder for the optional description within the email body should be clearly marked if possible, or the backend should insert the content of the optional description field into the correct place in the email.
+    A "Send Email" button.
+    A confirmation message on successful send (e.g., "Thank you! Your email has been sent to Uma Kumaran MP.").
+    A brief statement about data privacy: "Your details will be used solely for sending this email and will not be stored by this application."
+
+Backend Logic:
+
+    When the "Send Email" button is clicked:
+        Validate that "Full Name", "Postcode" (conforming to E20 format), and "Email Address" are provided. If not, display an error and prevent submission.
+        Collect all data from the input fields, including the (potentially modified) email body and the optional self-description.
+        Construct the email:
+            The email subject line should be: "Urgent Action Needed: Escalating Phone Thefts in E20, Stratford and Bow"
+            The main body of the email will be the content from the text area.
+            Ensure the user's "Full Name", "Postcode", and "Email Address" are appended to the signature of the email.
+            If the user provided an optional self-description, it should be inserted into the email body at the designated placeholder or appended before the main signature.
+        Send the email to:
+            To: uma.kumaran.mp@parliament.uk
+            CC (or BCC): The user's provided email address.
+            CC (or BCC): phone.thefts@andrewjones.uk
+        Ensure no user data (names, postcodes, email addresses, message content) is retained or stored by the application after the email has been successfully dispatched.
+    Implement basic error handling for email sending (e.g., "Sorry, there was an error sending your email. Please try again later.").
+
+Email Template (to be pre-filled in the text area):
+Plaintext
+
+Dear Ms. Kumaran,
+
+I am writing to you today as a concerned resident of E20 within your Stratford and Bow constituency to express my urgent alarm regarding the escalating crisis of phone thefts in our local area.
+
+For those of us living in E20, the sight of thieves on e-bikes brazenly snatching phones has become an unacceptable daily reality. This isn't an isolated issue; it's a persistent threat that significantly impacts our sense of safety and security. These incidents are a constant topic of discussion in our local WhatsApp groups and have been repeatedly raised in our local police forum meetings, yet the problem persists and, anecdotally, appears to be worsening.
+
+The current situation is untenable and requires immediate and robust intervention. We, your constituents in E20, urge you to take the following specific actions:
+
+1.  Raise this critical issue in Parliament to highlight the severity of phone crime in our community and across London.
+2.  Address this matter directly with the Commissioner of the Metropolitan Police, demanding a strategic and effective response to combat these thefts in E20.
+3.  Convey our grave concerns to the Home Secretary, emphasizing the need for national support and resources to tackle this type of crime.
+4.  Engage with the Mayor of London to ensure a coordinated approach and adequate resources are allocated to our area to address this problem.
+5.  Champion the call for the reinstatement of a dedicated local police post or presence for the E20 area, which we believe would act as a significant deterrent.
+6.  Advocate for significantly improved CCTV coverage in known hotspots within E20 to aid in the prevention and prosecution of these crimes.
+7.  Support and help facilitate the establishment of a local awareness campaign to educate residents on preventative measures and reporting mechanisms.
+
+[Optional: User's brief self-description or specific observation will be inserted here if provided]
+
+We believe that with your strong representation, we can begin to reclaim our streets and restore a sense of security for all residents in E20. We look forward to hearing about the actions you will take on our behalf.
+
+Sincerely,
+
+[User's Full Name will be automatically added here by the app]
+[User's Postcode will be automatically added here by the app]
+[User's Email Address will be automatically added here by the app]
+
+Technology Stack:
+
+    Let Replit's AI choose a suitable simple stack (e.g., Python/Flask, Node.js/Express, or similar common web technologies suitable for a single-page application with email functionality). The key is that it must be able to send emails and not store data.
+    The app must be deployable on Replit. "
