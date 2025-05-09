@@ -1,17 +1,58 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardStats } from "@shared/schema";
-import { ArrowUp, Mail, Users, LineChart } from "lucide-react";
+import { ArrowUp, Mail, Users, LineChart, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { data: stats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['/api/dashboard-stats'],
     refetchInterval: 60000, // Refresh every minute
   });
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [addingTestData, setAddingTestData] = useState(false);
+  
+  // Mutation for adding test data
+  const addTestDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/dev/add-test-data');
+      return response.json();
+    },
+    onMutate: () => {
+      setAddingTestData(true);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Test data added",
+        description: `Added ${data.data.fullName} from ${data.data.postcode}`,
+      });
+      // Invalidate the dashboard stats query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard-stats'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add test data",
+        variant: "destructive"
+      });
+    },
+    onSettled: () => {
+      setAddingTestData(false);
+    }
+  });
+
+  const handleAddTestData = () => {
+    addTestDataMutation.mutate();
+  };
 
   return (
     <>
@@ -164,6 +205,23 @@ export default function Dashboard() {
             This dashboard displays anonymized statistics only. No personal information is stored or displayed.
             Last updated: {new Date().toLocaleString()}
           </p>
+          
+          {/* Test data button - For demonstration purposes only */}
+          <div className="mt-4">
+            <Button 
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-1 mx-auto bg-slate-50"
+              onClick={handleAddTestData}
+              disabled={addingTestData}
+            >
+              <Plus className="h-3 w-3" />
+              {addingTestData ? "Adding test data..." : "Add test data (for demo only)"}
+            </Button>
+            <p className="text-xs mt-2 text-slate-400">
+              This button generates random test data to demonstrate the dashboard functionality
+            </p>
+          </div>
         </footer>
       </div>
     </>

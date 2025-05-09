@@ -139,6 +139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development utility endpoint to add test data
+  // This is for demonstration purposes only and should be disabled in production
+  app.post("/api/dev/add-test-data", addTestEmailRecord);
+
   const httpServer = createServer(app);
   return httpServer;
 }
