@@ -1,12 +1,13 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { emailFormSchema } from "@/lib/validation";
-import { sendEmail } from "./emailService";
+import { db } from "./db";
+import { emailMetrics, emailFormSchema, dashboardStatsSchema } from "@shared/schema";
+import { count, desc, eq, sql } from "drizzle-orm";
+import { formatDate } from "@/lib/utils";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Email sending endpoint
-  app.post("/api/send-email", async (req, res) => {
+  // Record email metrics and return success
+  app.post("/api/track-email", async (req, res) => {
     try {
       // Validate request body against schema
       const validation = emailFormSchema.safeParse(req.body);
@@ -18,6 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { fullName, postcode, email, description, emailContent } = validation.data;
+      const userAgent = req.headers["user-agent"] || "";
       
       // Make sure postcode is E20
       if (!postcode.toLowerCase().startsWith('e20')) {
@@ -26,21 +28,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Send the email
-      await sendEmail({
-        to: "uma.kumaran.mp@parliament.uk",
-        cc: [email, "phone.thefts@andrewjones.uk"],
-        subject: "Urgent Action Needed: Escalating Phone Thefts in E20, Stratford and Bow",
-        text: emailContent,
-        from: `${fullName} <no-reply@e20residents.org>`,
-        replyTo: email
+      // Check if the template was customized (simple check by looking for differences in length)
+      const originalLength = emailContent.indexOf("[Your Full Name") - emailContent.indexOf("Dear Ms. Kumaran,");
+      const customizedTemplate = originalLength !== 3050;  // This is an approximate length of the default template
+
+      // Record the email metrics
+      await db.insert(emailMetrics).values({
+        fullName,
+        postcode: postcode.toUpperCase(),
+        email,
+        description: description || null,
+        userAgent,
+        customizedTemplate
       });
 
-      return res.status(200).json({ message: "Email sent successfully" });
+      return res.status(200).json({ message: "Email metrics recorded successfully" });
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("Error recording email metrics:", error);
       return res.status(500).json({ 
-        message: "Failed to send email. Please try again later." 
+        message: "Failed to record email metrics. Please try again later." 
+      });
+    }
+  });
+
+  // Get dashboard stats
+  app.get("/api/dashboard-stats", async (req, res) => {
+    try {
+      // Get total emails sent
+      const [totalResult] = await db.select({ count: count() }).from(emailMetrics);
+      const totalEmailsSent = totalResult?.count || 0;
+
+      // Get emails sent today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const [todayResult] = await db
+        .select({ count: count() })
+        .from(emailMetrics)
+        .where(sql`DATE(sent_at) = CURRENT_DATE`);
+      const emailsToday = todayResult?.count || 0;
+
+      // Get emails by postcode (top 5)
+      const emailsByPostcode = await db
+        .select({
+          postcode: emailMetrics.postcode,
+          count: count(),
+        })
+        .from(emailMetrics)
+        .groupBy(emailMetrics.postcode)
+        .orderBy(desc(count()))
+        .limit(5);
+
+      // Get 10 most recent emails
+      const recentEmails = await db
+        .select({
+          fullName: emailMetrics.fullName,
+          postcode: emailMetrics.postcode,
+          sentAt: emailMetrics.sentAt,
+        })
+        .from(emailMetrics)
+        .orderBy(desc(emailMetrics.sentAt))
+        .limit(10);
+
+      // Format recent emails for display
+      const formattedRecentEmails = recentEmails.map(email => ({
+        ...email,
+        sentAt: formatDate(email.sentAt.toISOString())
+      }));
+
+      // Get emails sent by day (last 7 days)
+      const emailsSentByDay = await db
+        .select({
+          date: sql`to_char(sent_at, 'YYYY-MM-DD')`.as('date'),
+          count: count(),
+        })
+        .from(emailMetrics)
+        .where(sql`sent_at > CURRENT_DATE - INTERVAL '7 days'`)
+        .groupBy(sql`to_char(sent_at, 'YYYY-MM-DD')`)
+        .orderBy(sql`to_char(sent_at, 'YYYY-MM-DD')`);
+
+      const stats = {
+        totalEmailsSent,
+        emailsToday,
+        emailsByPostcode,
+        recentEmails: formattedRecentEmails,
+        emailsSentByDay
+      };
+
+      return res.status(200).json(stats);
+    } catch (error) {
+      console.error("Error getting dashboard stats:", error);
+      return res.status(500).json({ 
+        message: "Failed to get dashboard stats. Please try again later." 
       });
     }
   });

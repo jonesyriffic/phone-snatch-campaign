@@ -59,16 +59,28 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
   const updateEmailContentWithDescription = (description: string) => {
     let content = form.getValues("emailContent");
     
-    // Replace placeholder with description or keep it empty
+    // If there's a description, replace the placeholder with it
+    // Otherwise, remove the entire line containing the optional placeholder
     if (description) {
       content = content.replace(
         "[Optional: Your brief self-description or specific observation will be inserted here if provided]", 
         description
       );
     } else {
+      // Remove the entire line containing the optional placeholder plus the empty line after it (if any)
+      content = content.replace(
+        "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n\n", 
+        ""
+      );
+      // Also try with just a single newline in case there's no double spacing
+      content = content.replace(
+        "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n", 
+        ""
+      );
+      // And also try with the placeholder alone in case it's at the end without newlines
       content = content.replace(
         "[Optional: Your brief self-description or specific observation will be inserted here if provided]", 
-        "[Optional: Your brief self-description or specific observation will be inserted here if provided]"
+        ""
       );
     }
     
@@ -80,7 +92,7 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
     updateEmailContentWithDescription(watchDescription || "");
   }, [watchDescription]);
 
-  function onSubmit(data: EmailFormData) {
+  async function onSubmit(data: EmailFormData) {
     setIsSubmitting(true);
     
     try {
@@ -104,6 +116,18 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
       const cc = `${data.email},phone.thefts@andrewjones.uk`;
       
       const mailtoLink = `mailto:${to}?subject=${subject}&body=${body}&cc=${cc}`;
+      
+      // Track the email metrics in the background
+      try {
+        await apiRequest("POST", "/api/track-email", {
+          ...data,
+          emailContent: finalEmailContent,
+        });
+        console.log("Email metrics tracked successfully");
+      } catch (trackingError) {
+        // Don't fail the overall submission if just tracking fails
+        console.error("Failed to track email metrics:", trackingError);
+      }
       
       // Open the mailto link in a new window
       window.open(mailtoLink, '_blank');
@@ -206,7 +230,7 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
                 {/* Privacy Notice */}
                 <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
                   <p className="text-sm text-slate-600">
-                    <span className="font-medium text-slate-700">Privacy Notice:</span> Your details will be used solely for sending this email and will not be stored by this application.
+                    <span className="font-medium text-slate-700">Privacy Notice:</span> Your details will be used solely for sending this email. We collect anonymized metrics (postcode, submission time) to track the campaign's overall impact.
                   </p>
                 </div>
               </div>

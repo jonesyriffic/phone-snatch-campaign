@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,6 +16,47 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Email metrics table to track emails sent
+export const emailMetrics = pgTable("email_metrics", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  postcode: text("postcode").notNull(),
+  email: text("email").notNull(),
+  description: text("description"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  userAgent: text("user_agent"),
+  customizedTemplate: boolean("customized_template").default(false),
+});
+
+export const insertEmailMetricSchema = createInsertSchema(emailMetrics).omit({
+  id: true,
+  sentAt: true,
+});
+
+export type InsertEmailMetric = z.infer<typeof insertEmailMetricSchema>;
+export type EmailMetric = typeof emailMetrics.$inferSelect;
+
+// Dashboard statistics schema
+export const dashboardStatsSchema = z.object({
+  totalEmailsSent: z.number(),
+  emailsToday: z.number(),
+  emailsByPostcode: z.array(z.object({
+    postcode: z.string(),
+    count: z.number()
+  })),
+  recentEmails: z.array(z.object({
+    fullName: z.string(),
+    postcode: z.string(),
+    sentAt: z.string(),
+  })).optional(),
+  emailsSentByDay: z.array(z.object({
+    date: z.string(),
+    count: z.number()
+  })).optional()
+});
+
+export type DashboardStats = z.infer<typeof dashboardStatsSchema>;
 
 // Add email form schema
 export const emailFormSchema = z.object({
