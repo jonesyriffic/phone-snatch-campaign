@@ -49,48 +49,33 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
       fullName: "",
       postcode: "",
       email: "",
-      description: "",
+      anonymous: false,
       emailContent: DEFAULT_EMAIL_CONTENT,
     },
   });
 
-  const watchDescription = form.watch("description");
-
-  const updateEmailContentWithDescription = (description: string) => {
+  // Remove the description placeholder from the email content on component mount
+  useEffect(() => {
     let content = form.getValues("emailContent");
     
-    // If there's a description, replace the placeholder with it
-    // Otherwise, remove the entire line containing the optional placeholder
-    if (description) {
-      content = content.replace(
-        "[Optional: Your brief self-description or specific observation will be inserted here if provided]", 
-        description
-      );
-    } else {
-      // Remove the entire line containing the optional placeholder plus the empty line after it (if any)
-      content = content.replace(
-        "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n\n", 
-        ""
-      );
-      // Also try with just a single newline in case there's no double spacing
-      content = content.replace(
-        "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n", 
-        ""
-      );
-      // And also try with the placeholder alone in case it's at the end without newlines
-      content = content.replace(
-        "[Optional: Your brief self-description or specific observation will be inserted here if provided]", 
-        ""
-      );
-    }
+    // Remove the optional description line from the template
+    content = content.replace(
+      "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n\n", 
+      ""
+    );
+    // Also try with just a single newline in case there's no double spacing
+    content = content.replace(
+      "[Optional: Your brief self-description or specific observation will be inserted here if provided]\n", 
+      ""
+    );
+    // And also try with the placeholder alone in case it's at the end without newlines
+    content = content.replace(
+      "[Optional: Your brief self-description or specific observation will be inserted here if provided]", 
+      ""
+    );
     
     form.setValue("emailContent", content);
-  };
-
-  // Update email content when description changes
-  useEffect(() => {
-    updateEmailContentWithDescription(watchDescription || "");
-  }, [watchDescription]);
+  }, []);
 
   async function onSubmit(data: EmailFormData) {
     setIsSubmitting(true);
@@ -209,19 +194,25 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
                 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="anonymous"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-slate-700">Optional: Briefly describe yourself</FormLabel>
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-slate-50">
                       <FormControl>
-                        <Input 
-                          placeholder="e.g. A concerned parent, Long-term E20 resident" 
-                          {...field} 
-                          className="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                        />
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <FormLabel className="text-sm font-medium text-slate-700">
+                            Display as Anonymous on dashboard
+                          </FormLabel>
+                        </div>
                       </FormControl>
-                      <FormDescription className="text-xs text-slate-500">
-                        This will be inserted into your email
+                      <FormMessage className="text-red-500 text-sm" />
+                      <FormDescription className="text-xs text-slate-500 ml-6">
+                        Your name will appear as "Anonymous" in the campaign dashboard if selected
                       </FormDescription>
                     </FormItem>
                   )}

@@ -11,7 +11,7 @@ export const emailFormSchema = z.object({
   email: z.string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
-  description: z.string().optional(),
+  anonymous: z.boolean().default(false),
   emailContent: z.string().min(1, "Email content is required")
 });
 
