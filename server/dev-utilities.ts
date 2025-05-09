@@ -49,3 +49,22 @@ export const addTestEmailRecord = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Clear all email records for production deployment
+ */
+export const clearAllEmailRecords = async (req: Request, res: Response) => {
+  try {
+    // Delete all records from the emailMetrics table
+    await db.delete(emailMetrics);
+    
+    return res.status(200).json({ 
+      message: 'All email records cleared successfully'
+    });
+  } catch (error) {
+    console.error('Error clearing email records:', error);
+    return res.status(500).json({ 
+      message: 'Failed to clear email records'
+    });
+  }
+};

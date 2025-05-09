@@ -98,7 +98,7 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
       const subject = encodeURIComponent("Urgent Action Needed: Escalating Phone Thefts in E20, Stratford and Bow");
       const body = encodeURIComponent(finalEmailContent);
       const to = "uma.kumaran.mp@parliament.uk";
-      const cc = `${data.email},phone.thefts@andrewjones.uk`;
+      const cc = `${data.email}`;
       
       const mailtoLink = `mailto:${to}?subject=${subject}&body=${body}&cc=${cc}`;
       
@@ -240,7 +240,7 @@ export default function EmailForm({ onSuccess, onError }: EmailFormProps) {
                     <span className="col-span-2 text-slate-800">Urgent Action Needed: Escalating Phone Thefts in E20, Stratford and Bow</span>
                     
                     <span className="text-slate-600 font-medium">CC:</span>
-                    <span className="col-span-2 text-slate-800">Your email address, phone.thefts@andrewjones.uk</span>
+                    <span className="col-span-2 text-slate-800">Your email address</span>
                   </div>
                 </div>
                 

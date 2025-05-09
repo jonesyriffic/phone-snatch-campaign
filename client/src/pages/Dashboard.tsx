@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardStats } from "@shared/schema";
-import { ArrowUp, Mail, Users, LineChart, Plus } from "lucide-react";
+import { ArrowUp, Mail, Users, LineChart, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [addingTestData, setAddingTestData] = useState(false);
+  const [clearingData, setClearingData] = useState(false);
   
   // Mutation for adding test data
   const addTestDataMutation = useMutation({
@@ -50,8 +51,43 @@ export default function Dashboard() {
     }
   });
 
+  // Mutation for clearing all data
+  const clearDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/dev/clear-data');
+      return response.json();
+    },
+    onMutate: () => {
+      setClearingData(true);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Data cleared",
+        description: "All email records have been cleared successfully",
+      });
+      // Invalidate the dashboard stats query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard-stats'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear data",
+        variant: "destructive"
+      });
+    },
+    onSettled: () => {
+      setClearingData(false);
+    }
+  });
+
   const handleAddTestData = () => {
     addTestDataMutation.mutate();
+  };
+  
+  const handleClearData = () => {
+    if (window.confirm('Are you sure you want to clear all email records? This action cannot be undone.')) {
+      clearDataMutation.mutate();
+    }
   };
 
   return (
@@ -209,20 +245,33 @@ export default function Dashboard() {
             Last updated: {new Date().toLocaleString()}
           </p>
           
-          {/* Test data button - For demonstration purposes only */}
-          <div className="mt-4">
-            <Button 
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-1 mx-auto bg-slate-50"
-              onClick={handleAddTestData}
-              disabled={addingTestData}
-            >
-              <Plus className="h-3 w-3" />
-              {addingTestData ? "Adding test data..." : "Add test data (for demo only)"}
-            </Button>
-            <p className="text-xs mt-2 text-slate-400">
-              This button generates random test data to demonstrate the dashboard functionality
+          {/* Admin buttons for demonstration and deployment */}
+          <div className="mt-4 flex flex-col items-center space-y-4">
+            <div className="flex space-x-3">
+              <Button 
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1 bg-slate-50"
+                onClick={handleAddTestData}
+                disabled={addingTestData}
+              >
+                <Plus className="h-3 w-3" />
+                {addingTestData ? "Adding test data..." : "Add test data (for demo only)"}
+              </Button>
+              
+              <Button 
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1 bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                onClick={handleClearData}
+                disabled={clearingData}
+              >
+                <Trash2 className="h-3 w-3" />
+                {clearingData ? "Clearing data..." : "Clear all data (for deployment)"}
+              </Button>
+            </div>
+            <p className="text-xs text-slate-400">
+              These buttons are for demonstration and deployment preparation only
             </p>
           </div>
         </footer>

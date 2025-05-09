@@ -4,7 +4,7 @@ import { db } from "./db";
 import { emailMetrics, emailFormSchema, dashboardStatsSchema } from "@shared/schema";
 import { count, desc, eq, sql } from "drizzle-orm";
 import { formatDate } from "@/lib/utils";
-import { addTestEmailRecord } from "./dev-utilities";
+import { addTestEmailRecord, clearAllEmailRecords } from "./dev-utilities";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Record email metrics and return success
@@ -166,6 +166,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Development utility endpoint to add test data
   // This is for demonstration purposes only and should be disabled in production
   app.post("/api/dev/add-test-data", addTestEmailRecord);
+  
+  // Endpoint to clear all email records for production deployment
+  app.post("/api/dev/clear-data", clearAllEmailRecords);
 
   const httpServer = createServer(app);
   return httpServer;
