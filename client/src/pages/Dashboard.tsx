@@ -164,8 +164,8 @@ export default function Dashboard() {
         <footer className="mt-12 text-center text-sm text-slate-500">
           <Separator className="mb-4" />
           <p>
-            This dashboard displays anonymized statistics only. No personal information is stored or displayed.
-            Last updated: {new Date().toLocaleString()}
+            This dashboard displays limited participant information (first name and last initial only, unless anonymous is selected).
+            Email addresses are never displayed. Last updated: {new Date().toLocaleString()}
           </p>
         </footer>
       </div>
